@@ -89,7 +89,7 @@ def Data(N, n_spins, B0, tau, J, T, k_B): #tau time steps
         data["Label_{}".format(i)] = labels[i] 
         data["W_{}".format(i)] = works[i]
         for spin in range(len(trajectories[0][0])):
-            data["Spin_{}_{} ".format(i,spin)] = trajectories[i][:,spin]
+            data["Spin_{}_{}".format(i,spin)] = trajectories[i][:,spin]
             
     dataframe = pd.DataFrame(data)
     dataframe.to_csv("datosModelo.csv",index = False)
