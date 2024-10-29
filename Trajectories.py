@@ -24,10 +24,21 @@ def H(spins,B0,t,tau,J):
     
 def metropolis(spins, B0, t, tau, J, T):
     i = np.random.randint(0,len(spins))
-    Hi = H(spins, B0, t, tau, J)
+    #Hi = H(spins, B0, t, tau, J)
     spins[i] *= -1
-    Hf = H(spins, B0, t, tau, J)
-    delta_H = Hf - Hi
+    #Hf = H(spins, B0, t, tau, J)
+    #delta_H = Hf - Hi
+    
+    interaction = 0
+    if i == 0:
+        interaction = - 2 * (spins[i] * spins[i+1])
+    elif i == (len(spins) - 1):
+        interaction = - 2 * (spins[i-1] * spins[i])
+    else:
+        interaction = - 2 * (spins[i-1] * spins[i]) - 2 * (spins[i] * spins[i+1])
+    
+    delta_H =   (J * interaction) - (2 * B(B0,t,tau) * spins[i])
+    
     if delta_H > 0:
         if np.random.rand() > np.exp(-delta_H / (T)):
             spins[i] *= -1
