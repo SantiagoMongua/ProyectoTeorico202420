@@ -14,13 +14,12 @@ y = np.zeros(N)
 works = np.zeros(N)
 
 for i in range(N):
-    y[i] = int(dataframe["Label_{}".format(i)][0])
+    y[i] = int(dataframe["Label_{}".format(i)][0]) #labels
     works[i] = float(dataframe["W_{}".format(i)][0])
     for spin in range(10):
-        trajectories[i][:,spin] = np.array(dataframe["Spin_{}_{} ".format(i,spin)])
+        trajectories[i][:,spin] = np.array(dataframe["Spin_{}_{}".format(i,spin)])
     
 print(trajectories.shape) #12000 100 10
-print(trajectories)
 
 X = torch.from_numpy(trajectories).type(torch.float)
 y = torch.from_numpy(y).type(torch.float)
@@ -40,16 +39,15 @@ def accuracy_fn(y_true, y_pred):
 class LogisticRegression(nn.Module):
     def __init__(self,input_Dim):
         super().__init__()
-        self.layer_1 = nn.Linear(in_features=input_Dim,out_features=10)
-        self.layer_2 = nn.Linear(in_features=10,out_features=1) 
+        self.layer_1 = nn.Linear(in_features=input_Dim,out_features=1)
         
     def forward(self, x):
-        return self.layer_2(self.layer_1(x))
-    
-model = LogisticRegression(X.shape).to(device)
+        return self.layer_1(x)
+
+model = LogisticRegression(100,10).to(device)
 loss_fn = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(params=model.parameters(), lr=0.1)
-
+#Un vector lineal
 epochs = 500
 epoch_list = np.zeros(epochs)
 train_losses = np.zeros(epochs)
