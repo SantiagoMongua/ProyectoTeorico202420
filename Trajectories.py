@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scipy.integrate
 import time
-from scipy.constants import Boltzmann
 
 n_spins = 10 
 J = 1.
@@ -45,30 +44,26 @@ def metropolis(spins, B0, t, tau, J, T):
     
     return spins
 
-def dBdt(B0, t, tau):
-    return - B0 * (np.pi / tau) * np.sin((np.pi * t / tau))
-
-def dWFdt(B0, t, tau, spins):   
-    return - dBdt(B0, t, tau) * np.sum(spins)
-    
-def dWBdt(B0, t, tau, spins):
-    return - dBdt(B0, (tau-t), tau) * np.sum(spins)
-
-def trajectory(n_spins, tau, J, B0, T, forward = True):
+def trajectory_fn(n_spins, tau, J, B0, T, forward = True):
     trajectory = np.zeros((tau, n_spins))
     spins = np.random.choice([-1, 1], size=n_spins)
+    workings = np.zeros(tau-1)
     
     for t in range(tau):
         if forward:
             spins = metropolis(spins, B0, t, tau, J, T)
-            trajectory[t, :] = spins  
+            trajectory[t, :] = spins
+            if t != (tau-1):
+                workings[t] = - ((B(B0,t+1,tau) - B(B0,t,tau)) * np.sum(spins))
         
         else:
-            tr = tau - t
+            tr = tau - t - 1
             spins = metropolis(spins, B0, tr, tau, J, T)
-            trajectory[tr-1, :] = spins      
-    
-    return trajectory
+            trajectory[tr, :] = spins      
+            if tr != 0:
+                workings[tr] = - ((B(B0,tr-1,tau) - B(B0,tr,tau)) * np.sum(spins))
+                
+    return trajectory, workings
 
 def Data(N, n_spins, B0, tau, J, T): #tau time steps
     trajectories = np.zeros((N, tau, n_spins))
@@ -81,34 +76,37 @@ def Data(N, n_spins, B0, tau, J, T): #tau time steps
         rand = np.random.random()
         if rand > 0.5:
             #Forward trajectory
-            result = trajectory(n_spins, tau, J, B0, T)
-            trajectories[i] = result
-            work_forward = scipy.integrate.simpson([dWFdt(B0,t,tau,result) for t in range(tau)],x=steps)
+            trajectory, workings = trajectory_fn(n_spins, tau, J, B0, T)
+            trajectories[i] = trajectory
+            work_forward = np.sum(workings)
             works.append(work_forward)
             labels.append(1)
             
         else:
             #Backward trajectory
-            result = trajectory(n_spins, tau, J, B0, T, forward=False)
-            trajectories[i] = result
-            labels.append(0)
-            work_backward = scipy.integrate.simpson([dWBdt(B0,t,tau,result) for t in range(tau)],x=steps)
+            trajectory, workings = trajectory_fn(n_spins, tau, J, B0, T, forward=False)
+            trajectories[i] = trajectory
+            work_backward = np.sum(workings)
             works.append(work_backward)
-    
+            labels.append(0)
+            
     #csv for trajectories
     data_spins = {
     f"Spin_{spin}": np.hstack([trajectory[:, spin] for trajectory in trajectories])
     for spin in range(trajectories[0].shape[1])}
          
     dataframe = pd.DataFrame(data_spins)
-    dataframe.to_csv("Trajectories_{}_tau{}_nspins{}_T{}_J{}.csv".format(N,tau,n_spins,T,J),index = False)
+    dataframe.to_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
+    
+    #csv for labels and works
+    for i in range(len(labels)):
+        labels_works = {"Trajectory": i, "Label": labels[i], "Works": works[i]}
+    
+    dataframe = pd.DataFrame(data_spins)
+    dataframe.to_csv("Works_labels_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
     
     end = time.time()
     print("Generated {} trajectories in {:.2f} seconds.".format(N,end-start))  
-    
-    #csv for labels and works
-    labels_work = {}
-    
            
     """
     data = {}
