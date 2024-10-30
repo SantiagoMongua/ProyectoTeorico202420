@@ -7,9 +7,17 @@ import numpy as np
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(device)
 
-N = 11
-dataframe = pd.read_csv("datosModelo.csv")
+n_spins = 10 
+J = 1.
+tau = 100
+T = 10
+N = 12000
+
+df_spins = pd.read_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J))
 trajectories = np.zeros((N,100,10))
+
+"""
+N = 11
 y = np.zeros(N)
 works = np.zeros(N)
 
@@ -18,6 +26,7 @@ for i in range(N):
     works[i] = float(dataframe["W_{}".format(i)][0])
     for spin in range(10):
         trajectories[i][:,spin] = np.array(dataframe["Spin_{}_{}".format(i,spin)])
+"""
     
 print(trajectories.shape) #12000 100 10
 

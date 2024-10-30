@@ -1,16 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import scipy.integrate
 import time
+
+"""
+    This file allows to create the trajectories of a spin chain protocol, using the coupling constant in a fixed value
+    and changing the magnetic field in a sinusoidal way.
+    It uses the Metropolis algorithm to calculate the change on the spins in the time evolution.
+    Finally, it saves the data in a csv file for training a neural network to predict the directionality of the process
+"""
 
 n_spins = 10 
 J = 1.
-B0 = 1.
-tau = 100
-T = 10
-
-#spins = np.random.choice([-1,1], size = n_spins)
+B0 = 20.
+tau = 500
+T = 30
 
 def B(B0,t,tau):
     return B0 * np.cos((np.pi * t / tau)) 
@@ -24,7 +28,7 @@ def H(spins,B0,t,tau,J):
 def metropolis(spins, B0, t, tau, J, T):
     i = np.random.randint(0,len(spins))
     #Hi = H(spins, B0, t, tau, J)
-    spins[i] *= -1
+    spins[i] *= -1 # Flip the spin temporarily
     #Hf = H(spins, B0, t, tau, J)
     #delta_H = Hf - Hi
     
@@ -40,7 +44,7 @@ def metropolis(spins, B0, t, tau, J, T):
     
     if delta_H > 0:
         if np.random.rand() > np.exp(-delta_H / (T)):
-            spins[i] *= -1
+            spins[i] *= -1 # Undo the flip if move is rejected
     
     return spins
 
@@ -61,21 +65,20 @@ def trajectory_fn(n_spins, tau, J, B0, T, forward = True):
             spins = metropolis(spins, B0, tr, tau, J, T)
             trajectory[tr, :] = spins      
             if tr != 0:
-                workings[tr] = - ((B(B0,tr-1,tau) - B(B0,tr,tau)) * np.sum(spins))
-                
+                workings[tr-1] = - ((B(B0,tr-1,tau) - B(B0,tr,tau)) * np.sum(spins))
+       
     return trajectory, workings
 
-def Data(N, n_spins, B0, tau, J, T): #tau time steps
+def Data(N, n_spins, B0, tau, J, T):
     trajectories = np.zeros((N, tau, n_spins))
     labels = []
     works = []
-    steps = np.linspace(0, tau, tau)
     print("Algorithm running for {} trajectories.".format(N))
-    start = time.time() #Initial running time
+    start = time.time()
     for i in range(N):
         rand = np.random.random()
         if rand > 0.5:
-            #Forward trajectory
+            # Forward trajectory
             trajectory, workings = trajectory_fn(n_spins, tau, J, B0, T)
             trajectories[i] = trajectory
             work_forward = np.sum(workings)
@@ -83,47 +86,30 @@ def Data(N, n_spins, B0, tau, J, T): #tau time steps
             labels.append(1)
             
         else:
-            #Backward trajectory
+            # Backward trajectory
             trajectory, workings = trajectory_fn(n_spins, tau, J, B0, T, forward=False)
             trajectories[i] = trajectory
             work_backward = np.sum(workings)
             works.append(work_backward)
             labels.append(0)
             
-    #csv for trajectories
+    # Save spin trajectories
     data_spins = {
-    f"Spin_{spin}": np.hstack([trajectory[:, spin] for trajectory in trajectories])
-    for spin in range(trajectories[0].shape[1])}
+        f"Spin_{spin}": np.hstack([trajectory[:, spin] for trajectory in trajectories])
+        for spin in range(trajectories[0].shape[1])
+    }
          
-    dataframe = pd.DataFrame(data_spins)
-    dataframe.to_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
+    df_spins = pd.DataFrame(data_spins)
+    df_spins.to_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
     
-    #csv for labels and works
-    for i in range(len(labels)):
-        labels_works = {"Trajectory": i, "Label": labels[i], "Works": works[i]}
+    # Save labels and works
+    labels_works = [{"Trajectory": i, "Label": labels[i], "Works": works[i]} for i in range(N)]
     
-    dataframe = pd.DataFrame(data_spins)
-    dataframe.to_csv("Works_labels_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
-    
-    end = time.time()
-    print("Generated {} trajectories in {:.2f} seconds.".format(N,end-start))  
-           
-    """
-    data = {}
-    #Dividalo en 2 csv - labelswork y array
-    for i in range(len(trajectories)):
-        
-        data["Label_{}".format(i)] = labels[i] 
-        data["W_{}".format(i)] = works[i]
-        for spin in range(len(trajectories[0][0])):
-            data["Spin_{}_{}".format(i,spin)] = trajectories[i][:,spin]
-            
-    dataframe = pd.DataFrame(data)
-    dataframe.to_csv("datosModelo.csv",index = False)
+    df_works = pd.DataFrame(labels_works)
+    df_works.to_csv("Works_labels_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J),index = False)
     
     end = time.time()
-    print("Generated {} trajectories in {:.2f} seconds.".format(N,end-start))
-    return trajectories, labels, works"""
-    
+    print("Generated {} trajectories in {:.2f} seconds.".format(N,end-start))      
 
-Data(3,n_spins, B0, tau, J, T)
+# Run data generation
+Data(12000,n_spins, B0, tau, J, T)
