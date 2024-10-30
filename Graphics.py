@@ -10,7 +10,7 @@ N = 12000
 
 data = pd.read_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J))
 
-trajectory = data.values.reshape(-1, tau, n_spins)[2]
+trajectory = data.values.reshape(-1, tau, n_spins)[6]
 
 plt.figure(figsize=(6, 8))
 plt.imshow(trajectory, cmap="binary", aspect="auto", interpolation="nearest")
