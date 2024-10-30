@@ -14,7 +14,7 @@ n_spins = 10
 J = 1.
 B0 = 20.
 tau = 500
-T = 30
+T = 50
 
 def B(B0,t,tau):
     return B0 * np.cos((np.pi * t / tau)) 
@@ -65,8 +65,8 @@ def trajectory_fn(n_spins, tau, J, B0, T, forward = True):
             spins = metropolis(spins, B0, tr, tau, J, T)
             trajectory[tr, :] = spins      
             if tr != 0:
-                workings[tr-1] = - ((B(B0,tr-1,tau) - B(B0,tr,tau)) * np.sum(spins))
-       
+                workings[t] = - ((B(B0,t+1,tau) - B(B0,t,tau)) * np.sum(spins))
+                   
     return trajectory, workings
 
 def Data(N, n_spins, B0, tau, J, T):
