@@ -14,7 +14,7 @@ n_spins = 10
 J = 1.
 B0 = 20.
 tau = 500
-T = 50
+T = 30
 
 def B(B0,t,tau):
     return B0 * np.cos((np.pi * t / tau)) 
@@ -112,4 +112,4 @@ def Data(N, n_spins, B0, tau, J, T):
     print("Generated {} trajectories in {:.2f} seconds.".format(N,end-start))      
 
 # Run data generation
-Data(12000,n_spins, B0, tau, J, T)
+Data(1000,n_spins, B0, tau, J, T)

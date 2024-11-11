@@ -5,7 +5,7 @@ import numpy as np
 n_spins = 10 
 J = 1.
 tau = 500
-T = 50
+T = 10
 N = 12000
 
 data = pd.read_csv("Works_labels_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J))
@@ -21,9 +21,11 @@ plt.hist(work_forward, bins=30, density=True, alpha = 0.6, color='red', label="F
 plt.hist(work_backward, bins=30, density=True, alpha = 0.4, color='blue', label="Backward")
 plt.axvline(mean_forward, color='red', linestyle='-', linewidth=1.5, label=r'$\langle \beta W \rangle_F$ = {:.2f}'.format(mean_forward))
 plt.axvline(mean_backward, color='blue', linestyle='-', linewidth=1.5, label=r'$\langle \beta W \rangle_B$ = {:.2f}'.format(mean_backward))
-plt.xlabel(r"$W$")
-plt.ylabel(r"$\rho(W)$")
-plt.legend()
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.xlabel(r"$W$", fontsize=18)
+plt.ylabel(r"$\rho(W)$", fontsize=18)
+plt.legend(fontsize=18)
 plt.tight_layout()
 plt.show()
 
