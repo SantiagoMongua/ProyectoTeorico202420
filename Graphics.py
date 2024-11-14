@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 n_spins = 10 
 J = 1.
 tau = 500
-T = 10
-N = 12000
+T = 30
+N = 20000
 
 data = pd.read_csv("Trajectories_{}_tau_{}_nspins_{}_T_{}_J_{}.csv".format(N,tau,n_spins,T,J))
 
